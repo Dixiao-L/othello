@@ -1,31 +1,7 @@
 #!/usr/bin/env python3
 
 import sys
-from typing import List, Tuple
-
-
-def index(x, y):
-    '''
-    获取 (x,y) 点对应的下标
-    '''
-    return (x << 3) + y
-
-
-def reversi_ai(player: int, board: List[int], allow: List[bool]) -> Tuple[int, int]:
-    '''
-    AI 用户逻辑
-    参数：player: 当前玩家编号（0 或者 1）
-         board:  当前棋盘，长度为 64，0 表示 player0 的子, 1 表示 player1 的子, 2 表示没有落子
-         allow:  棋盘允许下子情况，长度为 64
-    '''
-    # example: act in the first feasible place
-    for x in range(0, 8):
-        for y in range(0, 8):
-            if allow[index(x, y)]:
-                return x, y
-    return 0, 0
-
-
+import strategy
 
 # DO NOT TOUCH ANY CODE BELOW
 # **不要修改**以下的代码
@@ -73,7 +49,7 @@ def start():
         str_list = list(data.decode()[2:-1])
         board_list = [int(i) for i in str_list]
         next_list = ask_next_pos(board_list, now_player)
-        x, y = reversi_ai(now_player, board_list, next_list)
+        x, y = strategy.reversi_ai(now_player, board_list, next_list)
         send_opt(str(x)+str(y))
 
 if __name__ == '__main__':
