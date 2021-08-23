@@ -3,7 +3,6 @@ import time
 import math
 import hash_table
 from random import randrange
-from zobrist import Zobrist
 from collections import defaultdict
 from copy import deepcopy
 from typing import List, Tuple
