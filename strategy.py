@@ -1,35 +1,20 @@
+from copy import deepcopy
 import sys
 import time
 import math
+from zobrist import zobrist_swap
 import hash_table
 from random import randrange
 from collections import defaultdict
 from typing import List, Tuple
 from map import new_mape
 from map import history
+from map import mape
+from debug import debug
 
 weight = [6, 11, 2, 10, 3] # corner, steady, frontier, mobility, parity
 
 hash = hash_table.HashTable()
-
-# zobrist
-swap_side = [randrange(1 << 32), randrange(1 << 32)]
-zarr = [[],[],[]]
-
-for pn in range(64):
-    zarr[0].append([randrange(1 << 32), randrange(1 << 32)])
-    zarr[1].append([randrange(1 << 32), randrange(1 << 32)])
-    zarr[2].append(
-        [zarr[0][pn][0] ^ zarr[1][pn][0], zarr[0][pn][1] ^ zarr[1][pn][1]]
-    )
-
-def zobrist_swap(key):
-    key[0] ^= swap_side[0]
-    key[1] ^= swap_side[1]
-
-def zobrist_set(key, pc, pn):
-    key[0] ^= zarr[pc][pn][0]
-    key[1] ^= zarr[pc][pn][1]
 
 rnd = [
 		{'s':  0, 'a':  1, 'b':  8, 'c':  9, 'dr': [ 1,  8]},
@@ -37,107 +22,6 @@ rnd = [
 		{'s': 56, 'a': 57, 'b': 48, 'c': 49, 'dr': [ 1, -8]},
 		{'s': 63, 'a': 62, 'b': 55, 'c': 54, 'dr': [-1, -8]}
 	]
-
-class mape:
-    # def __init__(self, player: int, board: List[int], allow: List[int], prevNum: int, key: List[int, int]) -> None:
-    def __init__(self, player, board, allow) -> None:
-        self.player = player
-        self.board = board[::]
-
-        self.frontier = []
-        self.cal_frontier()
-
-        self.nextIndex = [] # 下一步可走位置
-        self.nextNum = 0    # 下一步可走位置数
-        for i in range(64):
-            if allow[i]:
-                self.nextIndex.append(i)
-                self.nextNum += 1
-
-        debug(f"initial nextIndex: {self.nextIndex}")
-        self.nextRev = dict()   # 下一步可走位置的反转棋子
-        for i in self.nextIndex:    # 计算下一步反转棋子
-            self.cal_rev(i)
-
-        self.prevNum = 0    # 上一步可走位置数
-        self.key = [0, 0]      # 哈希表键值
-
-        self.black = board.count(0)
-        self.white = board.count(1)
-        self.space = board.count(2)
-
-    # def map_index(x, y):
-    #     '''
-    #     获取 (x,y) 点对应的下标
-    #     '''
-    #     return (x << 3) + y
-
-    def dire(self, i: int, j: int):
-        '''
-        获取棋盘格某一方向的格子
-        超过边界返回64
-        '''
-        dr = [-8, -7, 1, 9, 8, 7, -1, -9]
-        bk = [8, 0, 0, 0, 8, 7, 7, 7]
-        i += dr[j]
-        return 64 if (i >= 64 or i < 0 or (i & 7) == bk[j]) else i
-
-    def cal_frontier(self):
-        for i in range(64):
-            self.frontier.append(False)
-            if self.board[i] == 2:
-                for j in range(8):
-                    k = self.dire(i, j)
-                    if k == 64: continue
-                    if self.board[k] != 2:
-                        self.frontier[i] =True
-                        break
-
-    def cal_rev(self, i) -> bool:
-        possible_rev = []
-        for j in range(8):  # 8 directions
-            lb = 0
-            k = self.dire(i, j)
-            while k != 64:
-                if self.board[k] != 1 - self.player:    # match blank or self
-                    break
-                lb += 1
-                possible_rev.append(k)
-                k = self.dire(k, j) # march forward
-            if k == 64 or self.board[k] != self.player: # edge or blank
-                if lb != 0:
-                    possible_rev = possible_rev[:-lb]
-        if len(possible_rev):
-            self.nextRev[i] = possible_rev[:]
-            return True
-        return False
-
-    def allow_location(self) -> None:
-        '''
-        查找可走位置
-        '''
-        # debug(f"calculate location start time: {time.time()}")
-        self.nextIndex = []
-        self.nextRev = dict()
-        self.nextNum = 0
-
-        hist = history[self.player][self.space]
-        # debug(f"type hist: {type(hist)}")
-
-        for i in range(60):
-            fin = hist[i]
-            # debug(str(hist))
-            if (self.frontier[fin] == False):
-                continue
-            if self.cal_rev(fin):
-                self.nextIndex.append(fin)
-                self.nextNum += 1
-
-    def pass_round(self):
-        self.player = 1 - self.player
-        self.prevNum = self.nextNum
-        self.allow_location()
-        zobrist_swap(self.key)
 
 class MTD_ai:
     def __init__(self) -> None:
@@ -374,21 +258,26 @@ def debug(s):
     print(s, file=sys.stderr, flush=True)
 
 def reversi_ai(player: int, board: List[int], allow: List[bool], prev_map):
-    # TODO: 判断对方连续下子
     if prev_map == None:    # first step
         prev_map = mape(player, board, allow)
     else:
-        f = False
+        k = []
         for i in range(64):
             if prev_map.board[i] == 2 and board[i] != 2:    # 对方落子
-                # debug(f"new: {i}")
-                prev_map = new_mape(prev_map, i)
-                f = True
-                break
-        if f == False:  # 对方未落子
+                k.append(i)
+        if len(k) == 0:  # 对方未落子
             debug("beside pass")
             prev_map.pass_round()
             # debug(f"{prev_map.player}, {player}")
+        elif len(k) == 1:    # 对方落1子
+            prev_map = new_mape(prev_map, k[0])
+        else:
+            pass_map = mape(player, board, allow)
+            pass_map.key = deepcopy(prev_map.key)
+            for i in k:
+                zobrist_swap(pass_map.key)
+            prev_map = pass_map
+
 
     # debug("ai init")
     # if prev_map != None:
