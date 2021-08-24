@@ -12,7 +12,7 @@ for i in range(2):
     for j in range(61):
         history[i].append([0, 63, 7, 56, 37, 26, 20, 43, 19, 29, 34, 44, 21, 42, 45, 18, 2, 61, 23, 40, 5, 58, 47, 16, 10, 53, 22, 41, 13, 46, 17, 50, 51, 52, 12, 11, 30, 38, 25, 33, 4, 3, 59, 60, 39, 31, 24, 32, 1, 62, 15, 48, 8, 55, 6, 57, 9, 54, 14, 49])
 
-weight = [6, 11, 2, 2, 3] # corner, steady, frontier, mobility, parity
+weight = [6, 11, 2, 10, 3] # corner, steady, frontier, mobility, parity
 
 hash = hash_table.HashTable()
 
@@ -184,6 +184,11 @@ class MTD_ai:
         return best
 
     def evaluate(self, mape): # 评估函数
+        # 加入无子判断
+        if mape.black == 0:
+            return (2 * mape.player - 1) << 14
+        if mape.white == 0:
+            return (1 - 2 * mape.player) << 14
         def map_value(n: int):
             if n >= 64:
                 return None
@@ -296,8 +301,6 @@ class MTD_ai:
             return e
 
         hd = hash.getBest(mape.key)
-        # bug: 会找到上一次下的点并移到Index头部
-        # 怀疑是 hash.set 或 hash.getBest 有误
         if hd != None:
         # if hd in mape.nextIndex:
             # debug(mape.nextIndex)
