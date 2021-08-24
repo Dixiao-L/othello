@@ -3,7 +3,6 @@ import time
 import math
 import hash_table
 from random import randrange
-from zobrist import Zobrist
 from collections import defaultdict
 from copy import deepcopy
 from typing import List, Tuple
@@ -13,7 +12,7 @@ for i in range(2):
     for j in range(61):
         history[i].append([0, 63, 7, 56, 37, 26, 20, 43, 19, 29, 34, 44, 21, 42, 45, 18, 2, 61, 23, 40, 5, 58, 47, 16, 10, 53, 22, 41, 13, 46, 17, 50, 51, 52, 12, 11, 30, 38, 25, 33, 4, 3, 59, 60, 39, 31, 24, 32, 1, 62, 15, 48, 8, 55, 6, 57, 9, 54, 14, 49])
 
-weight = [6, 11, 2, 10, 3] # corner, steady, frontier, mobility, parity
+weight = [6, 11, 2, 8, 3] # corner, steady, frontier, mobility, parity
 
 hash = hash_table.HashTable()
 
@@ -147,12 +146,11 @@ class mape:
 class MTD_ai:
     def __init__(self) -> None:
         self.TIME_LIMIT = 2.975
-        self.OUTCOME_DEPTH = 0  # 终局搜索深度 未测试
+        self.OUTCOME_DEPTH = 8  # 终局搜索深度
         self.OUTCOME_COARSE = 10 # 终局模糊搜索深度
         self.start_time = 0
         self.out_time = 0
         self.max_depth = 0
-        # self.search_depth = 3   # 局中搜索深度
 
     def startSearch(self, mape) -> int:
         self.start_time = time.time()
@@ -174,7 +172,7 @@ class MTD_ai:
         self.out_time = self.start_time + self.TIME_LIMIT
         self.max_depth = 0
         try:
-            while self.max_depth < mape.space: #self.search_depth:
+            while self.max_depth < mape.space:
                 self.max_depth += 1
                 f = self.mtd_f(mape, self.max_depth, f)
                 best = hash.getBest(mape.key) # error: return prev
@@ -186,14 +184,6 @@ class MTD_ai:
         return best
 
     def evaluate(self, mape): # 评估函数
-        if mape.space == 0:
-            return self.outcome(mape)
-        # 加入无子判断
-        if mape.black == 0:
-            return (2 * mape.player - 1) << 14
-        if mape.white == 0:
-            return (1 - 2 * mape.player) << 14
-
         def map_value(n: int):
             if n >= 64:
                 return None
