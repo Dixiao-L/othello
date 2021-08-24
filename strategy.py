@@ -146,11 +146,12 @@ class mape:
 class MTD_ai:
     def __init__(self) -> None:
         self.TIME_LIMIT = 2.975
-        self.OUTCOME_DEPTH = 8  # 终局搜索深度 未测试
+        self.OUTCOME_DEPTH = 0  # 终局搜索深度 未测试
         self.OUTCOME_COARSE = 10 # 终局模糊搜索深度
         self.start_time = 0
         self.out_time = 0
         self.max_depth = 0
+        # self.search_depth = 3   # 局中搜索深度
 
     def startSearch(self, mape) -> int:
         self.start_time = time.time()
@@ -172,7 +173,7 @@ class MTD_ai:
         self.out_time = self.start_time + self.TIME_LIMIT
         self.max_depth = 0
         try:
-            while self.max_depth < mape.space:
+            while self.max_depth < mape.space: #self.search_depth:
                 self.max_depth += 1
                 f = self.mtd_f(mape, self.max_depth, f)
                 best = hash.getBest(mape.key) # error: return prev
@@ -184,11 +185,14 @@ class MTD_ai:
         return best
 
     def evaluate(self, mape): # 评估函数
+        if mape.space == 0:
+            return self.outcome(mape)
         # 加入无子判断
         if mape.black == 0:
             return (2 * mape.player - 1) << 14
         if mape.white == 0:
             return (1 - 2 * mape.player) << 14
+
         def map_value(n: int):
             if n >= 64:
                 return None
@@ -428,14 +432,14 @@ def reversi_ai(player: int, board: List[int], allow: List[bool], prev_map):
         f = False
         for i in range(64):
             if prev_map.board[i] == 2 and board[i] != 2:    # 对方落子
-                debug(f"new: {i}")
+                # debug(f"new: {i}")
                 prev_map = new_mape(prev_map, i)
                 f = True
                 break
         if f == False:  # 对方未落子
             debug("beside pass")
             prev_map.pass_round()
-            debug(f"{prev_map.player}, {player}")
+            # debug(f"{prev_map.player}, {player}")
 
     # debug("ai init")
     # if prev_map != None:
@@ -465,7 +469,7 @@ def reversi_ai(player: int, board: List[int], allow: List[bool], prev_map):
     # debug(f"frontier: {prev_map.frontier}")
 
     debug(f"v: {v}")
-    debug(f"supposed next index: {prev_map.nextIndex}")
+    # debug(f"supposed next index: {prev_map.nextIndex}")
 
 
     x, y = divmod(v, 8)
