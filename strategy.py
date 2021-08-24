@@ -4,13 +4,9 @@ import math
 import hash_table
 from random import randrange
 from collections import defaultdict
-from copy import deepcopy
 from typing import List, Tuple
-
-history = [[],[]]
-for i in range(2):
-    for j in range(61):
-        history[i].append([0, 63, 7, 56, 37, 26, 20, 43, 19, 29, 34, 44, 21, 42, 45, 18, 2, 61, 23, 40, 5, 58, 47, 16, 10, 53, 22, 41, 13, 46, 17, 50, 51, 52, 12, 11, 30, 38, 25, 33, 4, 3, 59, 60, 39, 31, 24, 32, 1, 62, 15, 48, 8, 55, 6, 57, 9, 54, 14, 49])
+from map import new_mape
+from map import history
 
 weight = [6, 11, 2, 10, 3] # corner, steady, frontier, mobility, parity
 
@@ -350,45 +346,6 @@ class MTD_ai:
         else:
             return mape.nextIndex[randrange(mape.nextNum)]
 
-def new_mape(old_map, n):
-    # debug(f"new map n: {n}")
-    nm = deepcopy(old_map)
-    nm.board[n] = old_map.player
-
-    nm.key = deepcopy(old_map.key)
-    zobrist_set(nm.key, old_map.player, n)
-
-    nm.frontier = old_map.frontier[::]
-    nm.frontier[n] = False
-    for i in range(8):
-        k = old_map.dire(n, i)
-        if k != 64 and nm.board[k] == 2:
-            nm.frontier[k] = True
-
-    ne = old_map.nextRev[n]
-    l = 0
-    for i in ne:
-        nm.board[i] = old_map.player
-        zobrist_set(nm.key, 2, i)
-        l += 1
-
-    # calculate space, b&w
-    if old_map.player == 0:
-        nm.black = old_map.black + l + 1
-        nm.white = old_map.white - l
-    else:
-        nm.white = old_map.white + l + 1
-        nm.black = old_map.black - l
-
-    nm.space = 64 - nm.black - nm.white
-    nm.player = 1 - old_map.player
-    nm.prevNum = old_map.nextNum
-
-    nm.allow_location()
-
-    zobrist_swap(nm.key)
-    return nm
-
 def sgn(num):   # sign function
     if num < 0:
         return -1
@@ -417,6 +374,7 @@ def debug(s):
     print(s, file=sys.stderr, flush=True)
 
 def reversi_ai(player: int, board: List[int], allow: List[bool], prev_map):
+    # TODO: 判断对方连续下子
     if prev_map == None:    # first step
         prev_map = mape(player, board, allow)
     else:
