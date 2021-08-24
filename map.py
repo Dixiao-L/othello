@@ -24,7 +24,7 @@ class mape:
                 self.nextIndex.append(i)
                 self.nextNum += 1
 
-        debug(f"initial nextIndex: {self.nextIndex}")
+        # debug(f"initial nextIndex: {self.nextIndex}")
         self.nextRev = dict()   # 下一步可走位置的反转棋子
         for i in self.nextIndex:    # 计算下一步反转棋子
             self.cal_rev(i)
