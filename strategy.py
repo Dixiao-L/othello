@@ -12,7 +12,7 @@ for i in range(2):
     for j in range(61):
         history[i].append([0, 63, 7, 56, 37, 26, 20, 43, 19, 29, 34, 44, 21, 42, 45, 18, 2, 61, 23, 40, 5, 58, 47, 16, 10, 53, 22, 41, 13, 46, 17, 50, 51, 52, 12, 11, 30, 38, 25, 33, 4, 3, 59, 60, 39, 31, 24, 32, 1, 62, 15, 48, 8, 55, 6, 57, 9, 54, 14, 49])
 
-weight = [6, 11, 2, 8, 3] # corner, steady, frontier, mobility, parity
+weight = [6, 11, 2, 10, 3] # corner, steady, frontier, mobility, parity
 
 hash = hash_table.HashTable()
 
@@ -261,8 +261,8 @@ class MTD_ai:
     def outcome(self, mape): # 终局结果
         s = mape.black - mape.white
         if self.max_depth >= self.OUTCOME_COARSE:
-            return (sgn(s) << 14) * (2 * mape.player - 1)
-        return ((s + mape.space * sgn(s)) << 14) * (2 * mape.player - 1)
+            return (sgn(s) << 14) * (1 - 2 * mape.player)
+        return ((s + mape.space * sgn(s)) << 14) * (1 - 2 * mape.player)
 
     def alpha_beta(self, mape, depth: int, alpha, beta):
         # debug(f"alpha-beta time: {time.time()}")
